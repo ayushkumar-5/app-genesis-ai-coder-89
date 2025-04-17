@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FileDown, Copy, Check, ArrowLeft, RefreshCw, Edit, Save } from 'lucide-react';
+import { FileDown, Copy, Check, ArrowLeft, RefreshCw, Edit, Save, Smartphone } from 'lucide-react';
 
 import Logo from '@/components/Logo';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -431,7 +430,7 @@ struct ContentView_Previews: PreviewProvider {
 struct ArticleDetailView: View {
     let article: Article
     @State private var isLoading = false
-    @Environment(\.openURL) private var openURL
+    @Environment(\\.openURL) private var openURL
     
     var body: some View {
         ScrollView {
@@ -650,7 +649,7 @@ The current implementation uses mock data in the FeedParser class. In a producti
 
 To implement real RSS parsing, replace the mock implementation in FeedParser with a proper XML parser. Here's a starting point:
 
-```swift
+\`\`\`
 func parse(data: Data) -> [Article] {
     var articles: [Article] = []
     let parser = XMLParser(data: data)
@@ -659,7 +658,7 @@ func parse(data: Data) -> [Article] {
     parser.parse()
     return delegate.articles
 }
-```
+\`\`\`
 
 Then implement a proper RSSParserDelegate class that conforms to XMLParserDelegate.`
   },
@@ -1053,7 +1052,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          if (!_showSearchBox) ...[
+          if (!_showSearchBox) ... [
             Text(
               'Weather App',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -1079,7 +1078,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-          ] else ...[
+          ] else ... [
             Expanded(
               child: TextField(
                 controller: _searchController,
