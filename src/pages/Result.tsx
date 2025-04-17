@@ -1086,3 +1086,473 @@ class _HomeScreenState extends State<HomeScreen> {
                   hintText: 'Search for a city...',
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.search),
+                    onPressed: _searchWeather,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+                onSubmitted: (_) => _searchWeather(),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                setState(() {
+                  _showSearchBox = false;
+                });
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorMessage(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              color: Colors.red,
+              size: 60,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Provider.of<WeatherProvider>(context, listen: false)
+                    .fetchWeatherForCurrentLocation();
+              },
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeatherContent(BuildContext context, WeatherInfo weatherInfo) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        await Provider.of<WeatherProvider>(context, listen: false)
+            .fetchWeatherData(weatherInfo.cityName);
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Container(
+          height: MediaQuery.of(context).size.height - 100, // Approximate app bar height
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              _buildCurrentWeather(context, weatherInfo),
+              const SizedBox(height: 20),
+              _buildHourlyForecast(context, weatherInfo),
+              const SizedBox(height: 20),
+              _buildDailyForecast(context, weatherInfo),
+              const SizedBox(height: 20),
+              _buildWeatherDetails(context, weatherInfo),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentWeather(BuildContext context, WeatherInfo weatherInfo) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Text(
+              weatherInfo.cityName,
+              style: theme.textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  weatherInfo.temperature.toStringAsFixed(1),
+                  style: theme.textTheme.displayMedium,
+                ),
+                Text(
+                  '°C',
+                  style: theme.textTheme.headlineSmall,
+                ),
+              ],
+            ),
+            Text(
+              weatherInfo.weatherIcon,
+              style: const TextStyle(fontSize: 60),
+            ),
+            Text(
+              weatherInfo.condition,
+              style: theme.textTheme.bodyLarge,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHourlyForecast(BuildContext context, WeatherInfo weatherInfo) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Hourly Forecast',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 120,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: weatherInfo.hourlyForecast.length,
+            itemBuilder: (context, index) {
+              final hourForecast = weatherInfo.hourlyForecast[index];
+              return Card(
+                margin: const EdgeInsets.only(right: 16),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  width: 80,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(hourForecast.time),
+                      const SizedBox(height: 8),
+                      Text(
+                        hourForecast.weatherIcon,
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                      const SizedBox(height: 8),
+                      Text('\${hourForecast.temperature.toStringAsFixed(0)}°C'),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDailyForecast(BuildContext context, WeatherInfo weatherInfo) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '7-Day Forecast',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 8),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: weatherInfo.dailyForecast.length,
+          itemBuilder: (context, index) {
+            final dayForecast = weatherInfo.dailyForecast[index];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(
+                      width: 50,
+                      child: Text(
+                        dayForecast.day,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Text(
+                      dayForecast.weatherIcon,
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    Row(
+                      children: [
+                        Text('\${dayForecast.maxTemp.toStringAsFixed(0)}°'),
+                        const SizedBox(width: 8),
+                        Text(
+                          '\${dayForecast.minTemp.toStringAsFixed(0)}°',
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWeatherDetails(BuildContext context, WeatherInfo weatherInfo) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Weather Details',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildDetailItem(
+                  context,
+                  Icons.water_drop_outlined,
+                  'Humidity',
+                  '\${weatherInfo.humidity}%',
+                ),
+                _buildDetailItem(
+                  context,
+                  Icons.air,
+                  'Wind Speed',
+                  '\${weatherInfo.windSpeed} m/s',
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(
+      BuildContext context, IconData icon, String label, String value) {
+    return Column(
+      children: [
+        Icon(icon, size: 24),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+      ],
+    );
+  }
+}`,
+        language: "dart"
+      },
+      {
+        name: "theme.dart",
+        content: `import 'package:flutter/material.dart';
+
+class AppTheme {
+  static final ThemeData lightTheme = ThemeData(
+    brightness: Brightness.light,
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.blue,
+      brightness: Brightness.light,
+    ),
+    appBarTheme: const AppBarTheme(
+      centerTitle: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+    ),
+    cardTheme: CardTheme(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.blue, width: 2),
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    ),
+  );
+
+  static final ThemeData darkTheme = ThemeData(
+    brightness: Brightness.dark,
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.blue,
+      brightness: Brightness.dark,
+    ),
+    appBarTheme: const AppBarTheme(
+      centerTitle: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+    ),
+    cardTheme: CardTheme(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.blue.shade300, width: 2),
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    ),
+  );
+}`
+      }
+    ],
+    instructions: `# Flutter Weather App Implementation Guide
+
+## Project Setup
+
+1. Create a new Flutter project: 
+   \`\`\`
+   flutter create weather_app
+   \`\`\`
+
+2. Add dependencies to pubspec.yaml:
+   \`\`\`yaml
+   dependencies:
+     flutter:
+       sdk: flutter
+     provider: ^6.0.5
+     http: ^1.1.0
+     location: ^5.0.0
+   \`\`\`
+
+3. Run \`flutter pub get\` to install dependencies
+
+## File Structure
+
+Copy the provided files into your project's lib folder:
+- main.dart: Entry point of the application
+- weather_model.dart: Data models and state management
+- weather_service.dart: API service for fetching weather data
+- home_screen.dart: Main UI screen
+- theme.dart: App theme configuration
+
+## Key Features
+
+1. **Current Weather Display**
+   - Shows temperature, condition, and weather icon
+   - Displays city name
+
+2. **Hourly Forecast**
+   - Horizontal scrolling list of hourly predictions
+   - Shows time, icon, and temperature
+
+3. **7-Day Forecast**
+   - Daily weather predictions
+   - Shows min/max temperatures and conditions
+
+4. **Weather Details**
+   - Additional information like humidity and wind speed
+
+5. **Location Support**
+   - Get weather for current location
+   - Search for weather by city name
+
+## Implementation Notes
+
+1. This implementation uses mock data for demonstration. In a production app:
+   - Replace the API key in weather_service.dart with your actual OpenWeatherMap API key
+   - Implement the real API calls in the weather_service.dart file
+   - Add proper error handling and loading states
+
+2. Location permission handling:
+   - The app requests location permissions when trying to get the current location
+   - On Android, update AndroidManifest.xml to include:
+     \`\`\`xml
+     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+     \`\`\`
+   - On iOS, update Info.plist to include:
+     \`\`\`xml
+     <key>NSLocationWhenInUseUsageDescription</key>
+     <string>This app needs access to location to show weather information.</string>
+     \`\`\`
+
+## Running the App
+
+Run the app with:
+\`\`\`
+flutter run
+\`\`\`
+
+## Future Improvements
+
+1. Add settings for temperature units (Celsius/Fahrenheit)
+2. Implement weather notifications
+3. Add more detailed weather information
+4. Add animations for weather conditions
+5. Implement caching for offline use`
+  }
+};
+
+// Result component
+const Result = () => {
+  return (
+    <div>
+      <h1>Result Component</h1>
+      <p>This is a placeholder for the result component.</p>
+    </div>
+  );
+};
+
+export default Result;
