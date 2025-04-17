@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FileDown, Copy, Check, ArrowLeft, RefreshCw, Edit, Save, Smartphone } from 'lucide-react';
@@ -1083,3 +1084,534 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: () {
                     setState(() {
                       _showSearchBox = true;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ] else ... [
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search for a city...',
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.search),
+                    onPressed: _searchWeather,
+                  ),
+                  prefixIcon: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () {
+                      setState(() {
+                        _showSearchBox = false;
+                      });
+                      _searchController.clear();
+                    },
+                  ),
+                ),
+                onSubmitted: (_) => _searchWeather(),
+                autofocus: true,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorMessage(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              color: Colors.red,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Provider.of<WeatherProvider>(context, listen: false)
+                    .fetchWeatherForCurrentLocation();
+              },
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeatherContent(BuildContext context, WeatherInfo weather) {
+    final theme = Theme.of(context);
+    
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            weather.cityName,
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            weather.condition,
+            style: theme.textTheme.titleLarge,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${weather.temperature.toStringAsFixed(1)}°',
+                style: theme.textTheme.displayLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                weather.weatherIcon,
+                style: theme.textTheme.displayMedium,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _buildWeatherDetails(weather),
+          const SizedBox(height: 24),
+          _buildHourlyForecast(weather),
+          const SizedBox(height: 24),
+          _buildDailyForecast(weather),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeatherDetails(WeatherInfo weather) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        _buildDetailItem(
+          icon: Icons.water_drop,
+          value: '${weather.humidity}%',
+          label: 'Humidity'
+        ),
+        _buildDetailItem(
+          icon: Icons.air,
+          value: '${weather.windSpeed} m/s',
+          label: 'Wind'
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailItem({
+    required IconData icon,
+    required String value,
+    required String label
+  }) {
+    return Column(
+      children: [
+        Icon(icon, size: 24),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHourlyForecast(WeatherInfo weather) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Hourly Forecast',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 120,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: weather.hourlyForecast.length,
+            itemBuilder: (context, index) {
+              final hourForecast = weather.hourlyForecast[index];
+              return Container(
+                margin: const EdgeInsets.only(right: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(hourForecast.time),
+                    const SizedBox(height: 8),
+                    Text(
+                      hourForecast.weatherIcon,
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${hourForecast.temperature.toStringAsFixed(0)}°',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDailyForecast(WeatherInfo weather) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '7-Day Forecast',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: weather.dailyForecast.length,
+            separatorBuilder: (context, index) => Divider(
+              height: 1,
+              color: Colors.grey[300],
+              indent: 16,
+              endIndent: 16,
+            ),
+            itemBuilder: (context, index) {
+              final day = weather.dailyForecast[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        day.day,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                    Text(
+                      day.weatherIcon,
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    Expanded(
+                      flex: 3,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${day.minTemp.toStringAsFixed(0)}°',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 50,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(2),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.blue[300]!,
+                                  Colors.red[300]!,
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${day.maxTemp.toStringAsFixed(0)}°',
+                            style: const TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}`,
+        language: "dart"
+      }
+    ],
+    instructions: `# Flutter Weather App Implementation Guide
+
+## Project Setup
+
+1. Create a new Flutter project: \`flutter create weather_app\`
+2. Replace the auto-generated files with the provided Dart files
+3. Add dependencies to pubspec.yaml:
+
+\`\`\`yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.0.3
+  http: ^0.13.4
+  location: ^4.4.0
+\`\`\`
+
+## File Structure
+
+- **main.dart**: Entry point of the app
+- **weather_model.dart**: Contains data models and state management
+- **weather_service.dart**: Handles data fetching and location services
+- **home_screen.dart**: Main UI of the application
+- **theme.dart**: Custom theme definitions (not shown)
+
+## Key Features
+
+- Current weather display
+- Hourly and 7-day forecast
+- Location-based weather
+- Search for weather by city
+- Clean, responsive UI
+- Dark/light theme support
+
+## Implementation Notes
+
+The current implementation uses mock data in the WeatherService class. In a production app, you should:
+
+1. Register for an API key from a weather provider like OpenWeatherMap
+2. Replace the mock implementation with actual API calls
+3. Add caching for performance and offline support
+4. Implement proper error handling
+
+## Running the App
+
+1. Install dependencies: \`flutter pub get\`
+2. Run the app: \`flutter run\`
+
+## Adding Real API Integration
+
+To implement real weather API integration, update the WeatherService class and uncomment the _fetchRealWeatherData method, replacing the mock implementation.`
+  }
+};
+
+// Component to render the result page
+export default function Result() {
+  const [selectedResponse, setSelectedResponse] = useState("kotlin-todo");
+  const [activeTab, setActiveTab] = useState("files");
+  const [editMode, setEditMode] = useState(false);
+  const [editedInstructions, setEditedInstructions] = useState("");
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  useEffect(() => {
+    // Check if there's a response ID in the URL query params
+    const params = new URLSearchParams(location.search);
+    const responseId = params.get("id");
+    
+    if (responseId && mockResponses[responseId]) {
+      setSelectedResponse(responseId);
+    }
+    
+    // Set initial instructions for editing
+    if (mockResponses[selectedResponse]) {
+      setEditedInstructions(mockResponses[selectedResponse].instructions);
+    }
+  }, [location.search]);
+  
+  const handleGoBack = () => {
+    navigate("/");
+  };
+  
+  const currentResponse = mockResponses[selectedResponse] || mockResponses["kotlin-todo"];
+  
+  const handleCopyAll = () => {
+    // Create a text representation of all files
+    const allFilesContent = currentResponse.files
+      .map(file => `// File: ${file.name}\n\n${file.content}`)
+      .join("\n\n");
+    
+    navigator.clipboard.writeText(allFilesContent);
+    toast("All files copied to clipboard");
+  };
+  
+  const handleDownload = () => {
+    // In a real app, this would create a zip file with all the code files
+    toast("Download functionality would be implemented in a real app");
+  };
+  
+  const toggleEditMode = () => {
+    if (editMode) {
+      // Save changes
+      // In a real app, this would update the stored instructions
+      toast("Changes saved");
+    }
+    setEditMode(!editMode);
+  };
+  
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="border-b">
+        <div className="container flex items-center justify-between h-16 px-4">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={handleGoBack}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <Logo />
+          </div>
+          <div className="flex items-center gap-2">
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
+        </div>
+      </header>
+      
+      <main className="container px-4 py-6">
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Left sidebar */}
+          <div className="w-full md:w-64 shrink-0">
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold">Project Code</h2>
+              
+              <div className="bg-card border rounded-lg p-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="h-5 w-5 text-muted-foreground" />
+                  <select 
+                    className="flex-1 bg-transparent text-sm font-medium" 
+                    value={selectedResponse}
+                    onChange={(e) => setSelectedResponse(e.target.value)}
+                  >
+                    <option value="kotlin-todo">Android - Todo App (Kotlin/Compose)</option>
+                    <option value="swift-rss">iOS - RSS Reader (Swift/SwiftUI)</option>
+                    <option value="dart-weather">Flutter - Weather App (Dart)</option>
+                  </select>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" onClick={handleCopyAll}>
+                    <Copy className="mr-1 h-4 w-4" />
+                    Copy All
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={handleDownload}>
+                    <FileDown className="mr-1 h-4 w-4" />
+                    Download
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setSelectedResponse("kotlin-todo")}>
+                    <RefreshCw className="mr-1 h-4 w-4" />
+                    Reset
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Main content */}
+          <div className="flex-1">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <div className="flex items-center justify-between mb-4">
+                <TabsList>
+                  <TabsTrigger value="files">Files</TabsTrigger>
+                  <TabsTrigger value="instructions">Instructions</TabsTrigger>
+                </TabsList>
+                
+                {activeTab === "instructions" && (
+                  <Button size="sm" variant={editMode ? "default" : "outline"} onClick={toggleEditMode}>
+                    {editMode ? (
+                      <>
+                        <Save className="mr-1 h-4 w-4" />
+                        Save
+                      </>
+                    ) : (
+                      <>
+                        <Edit className="mr-1 h-4 w-4" />
+                        Edit
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+              
+              <TabsContent value="files" className="space-y-4">
+                {currentResponse.files.map((file) => (
+                  <CodeExample
+                    key={file.name}
+                    fileName={file.name}
+                    language={file.language}
+                    code={file.content}
+                  />
+                ))}
+              </TabsContent>
+              
+              <TabsContent value="instructions">
+                {editMode ? (
+                  <Textarea
+                    value={editedInstructions}
+                    onChange={(e) => setEditedInstructions(e.target.value)}
+                    className="min-h-[500px] font-mono text-sm"
+                  />
+                ) : (
+                  <div className="prose prose-sm dark:prose-invert max-w-none p-4 bg-card border rounded-lg">
+                    <div dangerouslySetInnerHTML={{ 
+                      __html: currentResponse.instructions.replace(/\n/g, '<br>') 
+                    }} />
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
