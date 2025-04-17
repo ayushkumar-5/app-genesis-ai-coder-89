@@ -1114,7 +1114,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -1151,7 +1151,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildWeatherContent(BuildContext context, WeatherInfo weather) {
+  Widget _buildWeatherContent(BuildContext context, WeatherInfo weatherInfo) {
     final theme = Theme.of(context);
     
     return SingleChildScrollView(
@@ -1160,14 +1160,14 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            weather.cityName,
+            weatherInfo.cityName,
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            weather.condition,
+            weatherInfo.condition,
             style: theme.textTheme.titleLarge,
           ),
           const SizedBox(height: 16),
@@ -1176,40 +1176,40 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${weather.temperature.toStringAsFixed(1)}°',
+                '\${weatherInfo.temperature.toStringAsFixed(1)}°',
                 style: theme.textTheme.displayLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
-                weather.weatherIcon,
+                weatherInfo.weatherIcon,
                 style: theme.textTheme.displayMedium,
               ),
             ],
           ),
           const SizedBox(height: 24),
-          _buildWeatherDetails(weather),
+          _buildWeatherDetails(weatherInfo),
           const SizedBox(height: 24),
-          _buildHourlyForecast(weather),
+          _buildHourlyForecast(weatherInfo),
           const SizedBox(height: 24),
-          _buildDailyForecast(weather),
+          _buildDailyForecast(weatherInfo),
         ],
       ),
     );
   }
 
-  Widget _buildWeatherDetails(WeatherInfo weather) {
+  Widget _buildWeatherDetails(WeatherInfo weatherInfo) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         _buildDetailItem(
           icon: Icons.water_drop,
-          value: '${weather.humidity}%',
+          value: '\${weatherInfo.humidity}%',
           label: 'Humidity'
         ),
         _buildDetailItem(
           icon: Icons.air,
-          value: '${weather.windSpeed} m/s',
+          value: '\${weatherInfo.windSpeed} m/s',
           label: 'Wind'
         ),
       ],
@@ -1243,7 +1243,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHourlyForecast(WeatherInfo weather) {
+  Widget _buildHourlyForecast(WeatherInfo weatherInfo) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1256,9 +1256,9 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 120,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: weather.hourlyForecast.length,
+            itemCount: weatherInfo.hourlyForecast.length,
             itemBuilder: (context, index) {
-              final hourForecast = weather.hourlyForecast[index];
+              final hourForecast = weatherInfo.hourlyForecast[index];
               return Container(
                 margin: const EdgeInsets.only(right: 16),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
@@ -1284,7 +1284,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${hourForecast.temperature.toStringAsFixed(0)}°',
+                      '\${hourForecast.temperature.toStringAsFixed(0)}°',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -1297,7 +1297,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDailyForecast(WeatherInfo weather) {
+  Widget _buildDailyForecast(WeatherInfo weatherInfo) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1321,7 +1321,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: weather.dailyForecast.length,
+            itemCount: weatherInfo.dailyForecast.length,
             separatorBuilder: (context, index) => Divider(
               height: 1,
               color: Colors.grey[300],
@@ -1329,7 +1329,7 @@ class _HomeScreenState extends State<HomeScreen> {
               endIndent: 16,
             ),
             itemBuilder: (context, index) {
-              final day = weather.dailyForecast[index];
+              final day = weatherInfo.dailyForecast[index];
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
@@ -1351,7 +1351,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           Text(
-                            '${day.minTemp.toStringAsFixed(0)}°',
+                            '\${day.minTemp.toStringAsFixed(0)}°',
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontWeight: FontWeight.w500,
@@ -1373,7 +1373,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '${day.maxTemp.toStringAsFixed(0)}°',
+                            '\${day.maxTemp.toStringAsFixed(0)}°',
                             style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
                         ],
@@ -1388,6 +1388,35 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+}`,
+        language: "dart"
+      },
+      {
+        name: "theme.dart",
+        content: `import 'package:flutter/material.dart';
+
+class AppTheme {
+  static final ThemeData lightTheme = ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.blue,
+      brightness: Brightness.light,
+    ),
+    appBarTheme: const AppBarTheme(
+      elevation: 0,
+    ),
+  );
+
+  static final ThemeData darkTheme = ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.blue,
+      brightness: Brightness.dark,
+    ),
+    appBarTheme: const AppBarTheme(
+      elevation: 0,
+    ),
+  );
 }`,
         language: "dart"
       }
@@ -1452,6 +1481,7 @@ export default function Result() {
   const [activeTab, setActiveTab] = useState("files");
   const [editMode, setEditMode] = useState(false);
   const [editedInstructions, setEditedInstructions] = useState("");
+  const [language, setLanguage] = useState("kotlin");
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -1462,6 +1492,15 @@ export default function Result() {
     
     if (responseId && mockResponses[responseId]) {
       setSelectedResponse(responseId);
+      
+      // Set language based on selected response
+      if (responseId === "kotlin-todo") {
+        setLanguage("kotlin");
+      } else if (responseId === "swift-rss") {
+        setLanguage("swift");
+      } else if (responseId === "dart-weather") {
+        setLanguage("dart");
+      }
     }
     
     // Set initial instructions for editing
@@ -1469,6 +1508,13 @@ export default function Result() {
       setEditedInstructions(mockResponses[selectedResponse].instructions);
     }
   }, [location.search]);
+  
+  useEffect(() => {
+    // Update instructions when selected response changes
+    if (mockResponses[selectedResponse]) {
+      setEditedInstructions(mockResponses[selectedResponse].instructions);
+    }
+  }, [selectedResponse]);
   
   const handleGoBack = () => {
     navigate("/");
@@ -1511,7 +1557,7 @@ export default function Result() {
             <Logo />
           </div>
           <div className="flex items-center gap-2">
-            <LanguageToggle />
+            <LanguageToggle language={language} setLanguage={setLanguage} />
             <ThemeToggle />
           </div>
         </div>
@@ -1530,7 +1576,18 @@ export default function Result() {
                   <select 
                     className="flex-1 bg-transparent text-sm font-medium" 
                     value={selectedResponse}
-                    onChange={(e) => setSelectedResponse(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedResponse(e.target.value);
+                      // Update language when response changes
+                      const newSelection = e.target.value;
+                      if (newSelection === "kotlin-todo") {
+                        setLanguage("kotlin");
+                      } else if (newSelection === "swift-rss") {
+                        setLanguage("swift");
+                      } else if (newSelection === "dart-weather") {
+                        setLanguage("dart");
+                      }
+                    }}
                   >
                     <option value="kotlin-todo">Android - Todo App (Kotlin/Compose)</option>
                     <option value="swift-rss">iOS - RSS Reader (Swift/SwiftUI)</option>
