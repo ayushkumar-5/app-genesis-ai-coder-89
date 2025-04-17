@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FileDown, Copy, Check, ArrowLeft, RefreshCw, Edit, Save, Smartphone } from 'lucide-react';
@@ -12,8 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from "sonner";
+import { downloadAsZip } from "@/utils/download";
 
-// Mock response structure - in a real app, this would come from the API
 interface GeneratedFile {
   name: string;
   content: string;
@@ -25,7 +24,6 @@ interface GeneratedResponse {
   instructions: string;
 }
 
-// Mock data for example files
 const mockResponses: Record<string, GeneratedResponse> = {
   "example-default": {
     files: [
@@ -1114,7 +1112,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -1475,7 +1473,6 @@ To implement real weather API integration, update the WeatherService class and u
   }
 };
 
-// Component to render the result page
 export default function Result() {
   const [selectedResponse, setSelectedResponse] = useState("kotlin-todo");
   const [activeTab, setActiveTab] = useState("files");
@@ -1486,14 +1483,12 @@ export default function Result() {
   const location = useLocation();
   
   useEffect(() => {
-    // Check if there's a response ID in the URL query params
     const params = new URLSearchParams(location.search);
     const responseId = params.get("id");
     
     if (responseId && mockResponses[responseId]) {
       setSelectedResponse(responseId);
       
-      // Set language based on selected response
       if (responseId === "kotlin-todo") {
         setLanguage("kotlin");
       } else if (responseId === "swift-rss") {
@@ -1503,14 +1498,12 @@ export default function Result() {
       }
     }
     
-    // Set initial instructions for editing
     if (mockResponses[selectedResponse]) {
       setEditedInstructions(mockResponses[selectedResponse].instructions);
     }
   }, [location.search]);
   
   useEffect(() => {
-    // Update instructions when selected response changes
     if (mockResponses[selectedResponse]) {
       setEditedInstructions(mockResponses[selectedResponse].instructions);
     }
@@ -1523,7 +1516,6 @@ export default function Result() {
   const currentResponse = mockResponses[selectedResponse] || mockResponses["kotlin-todo"];
   
   const handleCopyAll = () => {
-    // Create a text representation of all files
     const allFilesContent = currentResponse.files
       .map(file => `// File: ${file.name}\n\n${file.content}`)
       .join("\n\n");
@@ -1532,15 +1524,18 @@ export default function Result() {
     toast("All files copied to clipboard");
   };
   
-  const handleDownload = () => {
-    // In a real app, this would create a zip file with all the code files
-    toast("Download functionality would be implemented in a real app");
+  const handleDownload = async () => {
+    try {
+      await downloadAsZip(currentResponse.files);
+      toast.success("Files downloaded successfully");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download files");
+    }
   };
   
   const toggleEditMode = () => {
     if (editMode) {
-      // Save changes
-      // In a real app, this would update the stored instructions
       toast("Changes saved");
     }
     setEditMode(!editMode);
@@ -1565,7 +1560,6 @@ export default function Result() {
       
       <main className="container px-4 py-6">
         <div className="flex flex-col md:flex-row gap-6">
-          {/* Left sidebar */}
           <div className="w-full md:w-64 shrink-0">
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">Project Code</h2>
@@ -1578,7 +1572,6 @@ export default function Result() {
                     value={selectedResponse}
                     onChange={(e) => {
                       setSelectedResponse(e.target.value);
-                      // Update language when response changes
                       const newSelection = e.target.value;
                       if (newSelection === "kotlin-todo") {
                         setLanguage("kotlin");
@@ -1613,7 +1606,6 @@ export default function Result() {
             </div>
           </div>
           
-          {/* Main content */}
           <div className="flex-1">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <div className="flex items-center justify-between mb-4">
